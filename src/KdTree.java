@@ -83,18 +83,15 @@ public class KdTree {
 
     private Node insertPoint(Point2D point, Node node) {
         if (node == null) return new Node(point);
-        if (node.point.equals(point)) return null;
-        if (node.compareToPoint(point) > 0) {
+        if (node.point.equals(point)) return node;
+        int comparison = node.compareToPoint(point);
+        if (comparison > 0) {
             node.right = insertPoint(point, node.right);
-            if (node.right != null) {
-                node.right.type = !node.type;
-            }
+            node.right.type = !node.type;
         }
-        if (node.compareToPoint(point) <= 0) {
+        if (comparison <= 0) {
             node.left = insertPoint(point, node.left);
-            if (node.left != null) {
-                node.left.type = !node.type;
-            }
+            node.left.type = !node.type;
         }
         int leftNodeCount = node.left != null ? node.left.count : 0;
         int rightNodeCount = node.right != null ? node.right.count : 0;
@@ -112,18 +109,15 @@ public class KdTree {
     private boolean containsPoint(Point2D point, Node node) {
         if (node == null) return false;
         if (node.point.equals(point)) return true;
-        if (node.type == ORDINATE_AXIS) {
-            if (node.point.x() > point.x())
-                return containsPoint(point, node.right);
-            if (node.point.x() < point.x())
-                return containsPoint(point, node.left);
+        int comparison = node.compareToPoint(point);
+        if (comparison > 0) {
+            return containsPoint(point, node.right);
         }
-        if (node.type == ABSISS_AXIS) {
-            if (node.point.y() > point.y())
-                return containsPoint(point, node.right);
-            if (node.point.y() < point.y())
-                return containsPoint(point, node.left);
+        if (comparison < 0) {
+            return containsPoint(point, node.left);
         }
+        if (node.left != null) return containsPoint(point, node.left);
+        if (node.right != null) return containsPoint(point, node.right);
         return false;
     }
 
@@ -336,11 +330,13 @@ public class KdTree {
             double y = in.readDouble();
             Point2D p = new Point2D(x, y);
             kdtree.insert(p);
+            StdOut.println(kdtree.size());
+            StdOut.println(kdtree.isEmpty());
         }
 
-//        StdOut.println("### TREE ###");
-//        kdtree.drawTree();
-//        StdOut.println();
+        StdOut.println("### TREE ###");
+        kdtree.drawTree();
+        StdOut.println();
 
         StdOut.println("### INSIDE POINTS ###");
         RectHV[] checkingRects = new RectHV[5];
@@ -357,31 +353,35 @@ public class KdTree {
             }
             StdOut.println("---#---#---");
         }
+
+        StdOut.println("### CONTAINS ###");
+        Point2D p = new Point2D(0.7, 0.65);
+        StdOut.println("point: " + p + " -> " + kdtree.contains(p));
     }
-//
-//    public void drawTree() {
-//        Point2D parent = root.point;
-//        Node leftNode = root.left;
-//        Point2D left = leftNode != null ? leftNode.point : null;
-//        Node rightNode = root.right;
-//        Point2D right = rightNode != null ? rightNode.point : null;
-//        StdOut.println(String.format("Root: %s [%s <-> %s]", parent, left, right));
-//
-//        drawSubTree(leftNode);
-//        drawSubTree(rightNode);
-//    }
-//
-//    private void drawSubTree(Node node) {
-//        if (node == null) return;
-//
-//        Point2D parent = node.point;
-//        Node leftNode = node.left;
-//        Point2D left = leftNode != null ? leftNode.point : null;
-//        Node rightNode = node.right;
-//        Point2D right = rightNode != null ? rightNode.point : null;
-//        StdOut.println(String.format("Sub: %s [%s <-> %s]", parent, left, right));
-//
-//        drawSubTree(leftNode);
-//        drawSubTree(rightNode);
-//    }
+
+    public void drawTree() {
+        Point2D parent = root.point;
+        Node leftNode = root.left;
+        Point2D left = leftNode != null ? leftNode.point : null;
+        Node rightNode = root.right;
+        Point2D right = rightNode != null ? rightNode.point : null;
+        StdOut.println(String.format("Root: %s [%s <-> %s]", parent, left, right));
+
+        drawSubTree(leftNode);
+        drawSubTree(rightNode);
+    }
+
+    private void drawSubTree(Node node) {
+        if (node == null) return;
+
+        Point2D parent = node.point;
+        Node leftNode = node.left;
+        Point2D left = leftNode != null ? leftNode.point : null;
+        Node rightNode = node.right;
+        Point2D right = rightNode != null ? rightNode.point : null;
+        StdOut.println(String.format("Sub: %s [%s <-> %s]", parent, left, right));
+
+        drawSubTree(leftNode);
+        drawSubTree(rightNode);
+    }
 }
